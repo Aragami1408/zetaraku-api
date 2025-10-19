@@ -18,18 +18,18 @@ def esc(val):
     # Escape backslash first, then single quote
     s = s.replace("\\", "\\\\").replace("'", "\\'")
     # (Optional) If you really want to escape double quotes too:
-    # s = s.replace('"', '\\"')
+    s = s.replace('"', '\\"')
     return f"{s}"
 
 for song in data['songs']:
     title = song.get('title')
     category = song.get('category')
     artist = song.get('artist')
-    bpm = song.get('bpm')
+    bpm = 0 if song.get('bpm') == None else song.get('bpm')
     imageName = song.get('imageName')
     version = song.get('version')
     releaseDate = song.get('releaseDate')
-    isNew = 'TRUE' if song.get('isNew') else 'FALSE'
+    isNew = 1 if song.get('isNew') else 0
     comment = "NULL" if song.get('comment') is None else f"'{song.get('comment')}'"
     
     song_insert = f"""INSERT INTO songs(title, category, artist, bpm, imageName, version, releaseDate, isNew, comment) VALUES (
@@ -41,19 +41,23 @@ for song in data['songs']:
         level = sheet.get('level')
         levelValue = sheet.get('levelValue')
         noteDesigner = sheet.get('noteDesigner', '-')
-        tap = sheet.get('tap')
-        hold = sheet.get('hold')
-        slide = sheet.get('slide')
-        touch = "NULL" if sheet.get('touch') is None else sheet.get('touch')
-        breakCount = sheet.get('breakCount')
+        tap = "NULL" if sheet.get('noteCounts').get('tap') is None else sheet.get('noteCounts').get('tap')
+        hold = "NULL" if sheet.get('noteCounts').get('hold') is None else sheet.get('noteCounts').get('hold')
+        slide = "NULL" if sheet.get('noteCounts').get('slide') is None else sheet.get('noteCounts').get('slide')
+        touch = "NULL" if sheet.get('noteCounts').get('touch') is None else sheet.get('noteCounts').get('touch')
+        breakCount = sheet.get('noteCounts').get('break')
         breakCount = "NULL" if breakCount is None else breakCount
-        total = sheet.get('total')
+        total = "NULL" if sheet.get('noteCounts').get('total') is None else sheet.get('noteCounts').get('total')
         
         sheet_insert = f"""INSERT INTO sheets (songId, difficulty, level, levelValue, noteDesigner, tap, hold, slide, touch, breakCount, total) VALUES
 ((SELECT songId FROM songs WHERE title = \"{title}\"), \"{difficulty}\", \"{level}\", {levelValue}, \"{esc(noteDesigner)}\", {tap}, {hold}, {slide}, {touch}, {breakCount}, {total});"""
         sheet_sqls.append(sheet_insert)
 
 # Save to SQL file
-with open(f"maimai_inserts_{datetime.now().date()}.sql", "w", encoding="utf-8") as f:
-    for stmt in song_sqls + sheet_sqls:
+with open(f"maimai_inserts_songs_{datetime.now().date()}.sql", "w", encoding="utf-8") as f:
+    for stmt in song_sqls:
+        f.write(stmt + "\n")
+
+with open(f"maimai_inserts_sheets_{datetime.now().date()}.sql", "w", encoding="utf-8") as f:
+    for stmt in sheet_sqls:
         f.write(stmt + "\n")

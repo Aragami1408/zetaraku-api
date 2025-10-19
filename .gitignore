@@ -1,3 +1,5 @@
 .env
 mariadb_data
 src/zetaraku/config.php
+maimai_inserts_sheets_2025-10-19.sql
+maimai_inserts_songs_2025-10-19.sql
