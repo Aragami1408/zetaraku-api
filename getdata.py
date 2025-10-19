@@ -10,6 +10,17 @@ data = response.json()
 song_sqls = []
 sheet_sqls = []
 
+def esc(val):
+    """Return a safe, fully-quoted SQL literal for MySQL (or NULL)."""
+    if val is None:
+        return "NULL"
+    s = str(val)
+    # Escape backslash first, then single quote
+    s = s.replace("\\", "\\\\").replace("'", "\\'")
+    # (Optional) If you really want to escape double quotes too:
+    # s = s.replace('"', '\\"')
+    return f"{s}"
+
 for song in data['songs']:
     title = song.get('title')
     category = song.get('category')
@@ -22,7 +33,7 @@ for song in data['songs']:
     comment = "NULL" if song.get('comment') is None else f"'{song.get('comment')}'"
     
     song_insert = f"""INSERT INTO songs(title, category, artist, bpm, imageName, version, releaseDate, isNew, comment) VALUES (
-    '{title}', '{category}', '{artist}', {bpm}, '{imageName}', '{version}', '{releaseDate}', {isNew}, {comment});"""
+    \"{esc(title)}\", \"{esc(category)}\", \"{esc(artist)}\", {bpm}, \"{imageName}\", \"{version}\", \"{releaseDate}\", {isNew}, \"{comment}\");"""
     song_sqls.append(song_insert)
     
     for sheet in song['sheets']:
@@ -39,7 +50,7 @@ for song in data['songs']:
         total = sheet.get('total')
         
         sheet_insert = f"""INSERT INTO sheets (songId, difficulty, level, levelValue, noteDesigner, tap, hold, slide, touch, breakCount, total) VALUES
-((SELECT songId FROM songs WHERE title = '{title}'), '{difficulty}', '{level}', {levelValue}, '{noteDesigner}', {tap}, {hold}, {slide}, {touch}, {breakCount}, {total});"""
+((SELECT songId FROM songs WHERE title = \"{title}\"), \"{difficulty}\", \"{level}\", {levelValue}, \"{esc(noteDesigner)}\", {tap}, {hold}, {slide}, {touch}, {breakCount}, {total});"""
         sheet_sqls.append(sheet_insert)
 
 # Save to SQL file
