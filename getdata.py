@@ -31,11 +31,12 @@ for song in data['songs']:
     releaseDate = song.get('releaseDate')
     isNew = 1 if song.get('isNew') else 0
     comment = "NULL" if song.get('comment') is None else f"'{song.get('comment')}'"
-    
-    song_insert = f"""INSERT INTO songs(title, category, artist, bpm, imageName, version, releaseDate, isNew, comment) VALUES (
+
+    if category != "宴会場":
+        song_insert = f"""INSERT INTO songs(title, category, artist, bpm, imageName, version, releaseDate, isNew, comment) VALUES (
     \"{esc(title)}\", \"{esc(category)}\", \"{esc(artist)}\", {bpm}, \"{imageName}\", \"{version}\", \"{releaseDate}\", {isNew}, \"{comment}\");"""
-    song_sqls.append(song_insert)
-    
+        song_sqls.append(song_insert)
+
     for sheet in song['sheets']:
         difficulty = sheet.get('difficulty')
         level = sheet.get('level')
@@ -48,10 +49,12 @@ for song in data['songs']:
         breakCount = sheet.get('noteCounts').get('break')
         breakCount = "NULL" if breakCount is None else breakCount
         total = "NULL" if sheet.get('noteCounts').get('total') is None else sheet.get('noteCounts').get('total')
-        
-        sheet_insert = f"""INSERT INTO sheets (songId, difficulty, level, levelValue, noteDesigner, tap, hold, slide, touch, breakCount, total) VALUES
+
+
+        if level != '*':
+            sheet_insert = f"""INSERT INTO sheets (songId, difficulty, level, levelValue, noteDesigner, tap, hold, slide, touch, breakCount, total) VALUES
 ((SELECT songId FROM songs WHERE title = \"{title}\"), \"{difficulty}\", \"{level}\", {levelValue}, \"{esc(noteDesigner)}\", {tap}, {hold}, {slide}, {touch}, {breakCount}, {total});"""
-        sheet_sqls.append(sheet_insert)
+            sheet_sqls.append(sheet_insert)
 
 # Save to SQL file
 with open(f"maimai_inserts_songs_{datetime.now().date()}.sql", "w", encoding="utf-8") as f:
